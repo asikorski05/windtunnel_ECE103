@@ -15,7 +15,7 @@
 // Insert these numbers from the calibration script.
 // This ensures that each reading is accurate.
 const int DRAG_CALIBRATION_SCALE = 0;
-const int LIFT_CALIBRATION SCALE = 0;
+const int LIFT_CALIBRATION_SCALE = 0;
 //const float THERM_WIND_CALIBRATION = 0.2;
 
 // Circuit wiring
@@ -42,13 +42,13 @@ const int TARE_BUTTON_PIN = 7;  // Connected to 10K pulldown resistor
   HX711 drag;
   HX711 lift;
 
+// Initilize Button
+  Pushbutton tareButton(TARE_BUTTON_PIN);
+
 void setup() {
 
   // Start Serial Monitor with 57600 baud rate
   Serial.begin(57600);
-
-  // Initilize Button
-  Pushbutton tareButton(TARE_BUTTON_PIN);
 
   // Initialize the load sensors
   drag.begin(DRAG_DOUT_PIN, DRAG_SCK_PIN);  // Initialize hardware
