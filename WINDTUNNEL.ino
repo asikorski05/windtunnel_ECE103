@@ -1,35 +1,42 @@
 /* This script sets up and records data from two load sensors with the
    purpose of measuring data from a wind tunnel apparatus.
-   Before using this script, please make sure each sensor is calibrated.
    A thermal anemometer is used to measure wind speed.
+   Before using this script, please make sure each sensor is calibrated.
    Data is output to the serial monitor at specified baud rate (57200).
 
-   Written by Alex Sikorski for ECE103. Revision 1.
+   Written by Alex Sikorski for ECE103. Revision 3.
    Windspeed code modified from https://github.com/moderndevice/Wind_Sensor/blob/master/WindSensor/WindSensor.ino
    HX711 Library used from: https://github.com/bogde/HX711/releases
+
+   Connect the drag sensor's DOUT to D2, and SCK to D3.  (Parallel to airflow)
+   Connect the lift sensor's DOUT to D4, and SCK to D5.  (Orthogonal to airflow)
+   Connect the thermistor's TMP to A0, and RV to A1.
+   Pin 7 is connected to a pushbutton with a pulldown resistor.
 */
+
 #include <Arduino.h>
 #include "HX711.h"
 #include <Pushbutton.h>
 
 // Insert these numbers from the calibration script.
-// This ensures that each reading is accurate.
+// Also insert the units used from the calculation.
 const int DRAG_CALIBRATION_SCALE = 0;
 const int LIFT_CALIBRATION_SCALE = 0;
+char UNITS[] = "grams";
 const float THERM_WIND_CALIBRATION = 0.2;
 
-// Circuit wiring
+// define wiring
 const int DRAG_DOUT_PIN = 2;
-const int DRAG_SCK_PIN = 3;     // PWM
+const int DRAG_SCK_PIN = 3;
 const int LIFT_DOUT_PIN = 4;
-const int LIFT_SCK_PIN = 5;     // PWM
-const int TARE_BUTTON_PIN = 7;  // Connected to 10K pulldown resistor
-const int RV_ANALOG_PIN = 1;    // Analog
-const int TMP_ANALOG_PIN = 0;   // Analog
+const int LIFT_SCK_PIN = 5;
+const int TARE_BUTTON_PIN = 7;  // Pulled high when pressed
+const int RV_ANALOG_PIN = 1;
+const int TMP_ANALOG_PIN = 0; 
 
 // WIND SPEED VARIABLES FOR CALCULATION
-  int TMP_Therm_ADunits;  //temp termistor value from wind sensor
-  float RV_Wind_ADunits;    //RV output from wind sensor 
+  int TMP_Therm_ADunits;  //temp thermistor value from wind sensor
+  float RV_Wind_ADunits;  //RV output from wind sensor 
   float RV_Wind_Volts;
   unsigned long lastMillis;
   int TempCtimes100;
@@ -37,11 +44,9 @@ const int TMP_ANALOG_PIN = 0;   // Analog
   float zeroWind_volts;
   float WindSpeed_MPH;
 
-// Initializing instances of library
+// Initializing libraries as objects
   HX711 drag;
   HX711 lift;
-
-// Initilize Button
   Pushbutton tareButton(TARE_BUTTON_PIN);
 
 void setup() {
@@ -58,13 +63,13 @@ void setup() {
   lift.set_scale(LIFT_CALIBRATION_SCALE);
   lift.tare();
 
-// Resetting analog pins for thermistor
+// set analog pins for thermistor
   pinMode(A2, INPUT);        // GND pin      
   pinMode(A3, INPUT);        // VCC pin
   digitalWrite(A3, LOW);     // turn off pullups
 
-
-  Serial.print("Setup Complete! /n /n");
+  Serial.print("\n\n Setup Complete! \n\n");
+  delay(1000);
 }
 
 void loop() {
@@ -72,7 +77,7 @@ void loop() {
   // If button is pressed, tare the sensors.
   if (tareButton.getSingleDebouncedPress())
   {
-    Serial.println("Taring both sensors...");
+    Serial.println("Taring sensors...");
     drag.tare();
     lift.tare();
     delay(1000);
@@ -80,19 +85,18 @@ void loop() {
 
   /* Reading both sensors and printing output.
      The 'if' statement allows us to safely continue
-     execution if a hardware failure occurs.
-     We do have to delay each reading to check
-     sensor status however. (200ms)       
-  */
-  if ((lift.wait_ready_timeout(200)) && (drag.wait_ready_timeout(200)))
+     execution if a hardware failure occurs. (200ms delay)       
+  */  
+  if (lift.wait_ready_timeout(200) && drag.wait_ready_timeout(200))
   {
-    long L_reading = lift.get_units(10);
-    Serial.print("Lift: ");
-    Serial.println(L_reading, 2);
-
-    long D_reading = drag.get_units(10);
-    Serial.print("Drag: ");
-    Serial.println(D_reading, 2);   
+    Serial.print("Drag:\t");
+    Serial.print(drag.get_units(), 1);
+    Serial.print("  ");
+    Serial.print(UNITS);
+    Serial.print("\t\tLift:\t");
+    Serial.print(drag.get_units(), 1);
+    Serial.print("  ");
+    Serial.println(UNITS);  
   }
   else
   {
@@ -101,8 +105,13 @@ void loop() {
     delay(5000);
   }
 
+
+
+  // EDIT ME WHEN SENSOR SHIPS!!!
+  
   // Wind sensor readings for manual calibration. Code modified from repository cited.
-  if (millis() - lastMillis > 200)      // read every 200 ms - printing slows this down further
+
+  if (millis() - lastMillis > 200)      // read every 200 ms
   {
     TMP_Therm_ADunits = analogRead(TMP_ANALOG_PIN);
     RV_Wind_ADunits = analogRead(RV_ANALOG_PIN);
