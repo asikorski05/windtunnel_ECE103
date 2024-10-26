@@ -16,22 +16,24 @@
 const int DRAG_CALIBRATION_SCALE = 400;
 const int LIFT_CALIBRATION_SCALE = 400;
 char UNITS[] = "grams";
-
 // define wiring
+
 const int DRAG_DOUT_PIN = 2;
 const int DRAG_SCK_PIN = 3;
 const int LIFT_DOUT_PIN = 4;
 const int LIFT_SCK_PIN = 5;
-const int TARE_BUTTON_PIN = 7;  // Connected to 10K pulldown resistor
+const int TARE_BUTTON_PIN = 7;
+const int SLOW_BUTTON_PIN = 8;
+
+bool slow = false;
 
 // Initializing libraries as objects
   HX711 drag;
   HX711 lift;
   Pushbutton tareButton(TARE_BUTTON_PIN);
+  Pushbutton slowButton(SLOW_BUTTON_PIN);
 
 void setup() {
-
-  // Start Serial Monitor with 57600 baud rate
   Serial.begin(57600);
 
   // Initialize the load sensors
@@ -52,31 +54,46 @@ void loop() {
   // If button is pressed, tare the sensors.
   if (tareButton.getSingleDebouncedPress())
   {
-    Serial.println("Taring sensors...");
+    Serial.println("\nTaring sensors...\n");
     drag.tare();
     lift.tare();
     delay(1000);
   }
 
+  // If slow button is pressed, toggle boolean for slower output
+  if (slowButton.getSingleDebouncedPress())
+  {
+    Serial.println("\nToggling slow mode...\n");
+    slow = !slow;
+    delay(1000);
+  }  
+
   /* Reading both sensors and printing output.
      The 'if' statement allows us to safely continue
-     execution if a hardware failure occurs. (200ms delay)       
+     execution if a hardware failure occurs. (400ms startup delay)       
   */
-  if (drag.wait_ready_timeout(200) && lift.wait_ready_timeout(200))
+  if (drag.wait_ready_timeout(400) && lift.wait_ready_timeout(400))
   {
     Serial.print("Drag:\t");
     Serial.print(drag.get_units(), 1);
     Serial.print("  ");
     Serial.print(UNITS);
     Serial.print("\t\tLift:\t");
-    Serial.print(drag.get_units(), 1);
+    Serial.print(lift.get_units(), 1);
     Serial.print("  ");
-    Serial.println(UNITS);  
+    Serial.println(UNITS);
   }
   else
   {
     // Hardware failure, sensors did not initialize in time
     Serial.println("HX711 not found. Please check connections.");
     delay(5000);
+  }
+
+  // delay print output while slow mode is on;
+  // only needed for serial
+  if(slow)
+  {
+    delay(250);
   }
 }
