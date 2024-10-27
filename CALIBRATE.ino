@@ -43,7 +43,7 @@ void loop() {
     tareButton.waitForButton();
     drag.tare();
     Serial.println("Tare done.");
-    Serial.print("Place a known weight on the drag sensor and press the tare button.");
+    Serial.println("Place a known weight on the drag sensor and press the tare button.");
     tareButton.waitForButton();
     long reading = drag.get_units(10);
     Serial.print("Drag Result: ");
@@ -68,7 +68,7 @@ void loop() {
     tareButton.waitForButton();
     lift.tare();
     Serial.println("Tare done.");
-    Serial.print("Place a known weight on the lift sensor and press the tare button.");
+    Serial.println("Place a known weight on the lift sensor and press the tare button.");
     tareButton.waitForButton();
     long reading = lift.get_units(10);
     Serial.print("Lift Result: ");
