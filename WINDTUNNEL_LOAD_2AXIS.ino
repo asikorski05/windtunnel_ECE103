@@ -3,7 +3,7 @@
    Before using this script, please make sure each sensor is calibrated.
    Data is output to the serial monitor at specified baud rate (57200).
 
-   Written by Alex Sikorski for ECE103. Revision 3.
+   Written by Alex Sikorski for ECE103. Revision 4.
    Windspeed code modified from https://github.com/moderndevice/Wind_Sensor/blob/master/WindSensor/WindSensor.ino
    HX711 Library used from: https://github.com/bogde/HX711/releases
 */
@@ -13,14 +13,19 @@
 #include <Pushbutton.h>
 
 // Insert these numbers from the calibration script
-const int DRAG_CALIBRATION_SCALE = -796;  // A
-const int LIFT_CALIBRATION_SCALE = 779.5; // B
+const int DRAG_CALIBRATION_SCALE = 797.125;  // A
+const int LIFT_CALIBRATION_SCALE = 783.125; // B
 char UNITS[] = "grams";
+
+// How many decimal places to print?
+// Default is 1 due to fluctuating values.
+const int decimalPrecision = 1;
+
 // define wiring
 
-const int DRAG_DOUT_PIN = 2;
+const int DRAG_DOUT_PIN = 2;  // A
 const int DRAG_SCK_PIN = 3;
-const int LIFT_DOUT_PIN = 4;
+const int LIFT_DOUT_PIN = 4;  // B
 const int LIFT_SCK_PIN = 5;
 const int TARE_BUTTON_PIN = 7;
 const int SLOW_BUTTON_PIN = 8;
@@ -75,11 +80,11 @@ void loop() {
   if (drag.wait_ready_timeout(400) && lift.wait_ready_timeout(400))
   {
     Serial.print("Drag:\t");
-    Serial.print(drag.get_units(), 1);
+    Serial.print(drag.get_units(), decimalPrecision);
     Serial.print("  ");
     Serial.print(UNITS);
     Serial.print("\t\tLift:\t");
-    Serial.print(lift.get_units(), 1);
+    Serial.print(lift.get_units(), decimalPrecision);
     Serial.print("  ");
     Serial.println(UNITS);
   }
