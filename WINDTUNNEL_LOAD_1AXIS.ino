@@ -13,8 +13,8 @@
 #include <Pushbutton.h>
 
 // Insert these numbers from the calibration script
-const int DRAG_CALIBRATION_SCALE = 400;
-const int LIFT_CALIBRATION_SCALE = 400;
+const int DRAG_CALIBRATION_SCALE = -795;  // A
+const int LIFT_CALIBRATION_SCALE = 779.5; // B
 char UNITS[] = "grams";
 
 // define wiring
