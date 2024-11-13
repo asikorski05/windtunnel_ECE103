@@ -4,7 +4,7 @@
    Before using this script, please make sure each sensor is calibrated.
    Data is output to the serial monitor at specified baud rate (57200).
 
-   Written by Alex Sikorski for ECE103. Revision 3.
+   Written by Alex Sikorski for ECE103. Revision 4.
    Windspeed code modified from https://github.com/moderndevice/Wind_Sensor/blob/master/WindSensor/WindSensor.ino
    HX711 Library used from: https://github.com/bogde/HX711/releases
 
@@ -20,19 +20,21 @@
 
 // Insert these numbers from the calibration script.
 // Also insert the units used from the calculation.
-const int DRAG_CALIBRATION_SCALE = 0;
-const int LIFT_CALIBRATION_SCALE = 0;
+const int DRAG_CALIBRATION_SCALE = 797.125;  // A
+const int LIFT_CALIBRATION_SCALE = 783.125;  // B
 char UNITS[] = "grams";
-const float THERM_WIND_CALIBRATION = 0.2;
+const float THERM_WIND_CALIBRATION = -2.4;
 
-// define wiring
+// define wiring and vars
 const int DRAG_DOUT_PIN = 2;
 const int DRAG_SCK_PIN = 3;
 const int LIFT_DOUT_PIN = 4;
 const int LIFT_SCK_PIN = 5;
 const int TARE_BUTTON_PIN = 7;  // Pulled high when pressed
+const int SLOW_BUTTON_PIN = 8;
 const int RV_ANALOG_PIN = 1;
 const int TMP_ANALOG_PIN = 0; 
+bool slow = false;
 
 // WIND SPEED VARIABLES FOR CALCULATION
   int TMP_Therm_ADunits;  //temp thermistor value from wind sensor
@@ -48,6 +50,7 @@ const int TMP_ANALOG_PIN = 0;
   HX711 drag;
   HX711 lift;
   Pushbutton tareButton(TARE_BUTTON_PIN);
+  Pushbutton slowButton(SLOW_BUTTON_PIN);
 
 void setup() {
 
@@ -63,16 +66,11 @@ void setup() {
   lift.set_scale(LIFT_CALIBRATION_SCALE);
   lift.tare();
 
-// set analog pins for thermistor
-  pinMode(A2, INPUT);        // GND pin      
-  pinMode(A3, INPUT);        // VCC pin
-  digitalWrite(A3, LOW);     // turn off pullups
-
   Serial.print("\n\n Setup Complete! \n\n");
   delay(1000);
 }
 
-void loop() {
+void loop() {     // MAIN PROGRAM LOOP
 
   // If button is pressed, tare the sensors.
   if (tareButton.getSingleDebouncedPress())
@@ -85,7 +83,7 @@ void loop() {
 
   /* Reading both sensors and printing output.
      The 'if' statement allows us to safely continue
-     execution if a hardware failure occurs. (200ms delay)       
+     execution if a hardware failure occurs.       
   */  
   if (lift.wait_ready_timeout(200) && drag.wait_ready_timeout(200))
   {
@@ -96,7 +94,7 @@ void loop() {
     Serial.print("\t\tLift:\t");
     Serial.print(drag.get_units(), 1);
     Serial.print("  ");
-    Serial.println(UNITS);  
+    Serial.print(UNITS);  
   }
   else
   {
@@ -105,14 +103,7 @@ void loop() {
     delay(5000);
   }
 
-
-
-  // EDIT ME WHEN SENSOR SHIPS!!!
-  
-  // Wind sensor readings for manual calibration. Code modified from repository cited.
-
-  if (millis() - lastMillis > 200)      // read every 200 ms
-  {
+  // Wind sensor code modified from repository cited.
     TMP_Therm_ADunits = analogRead(TMP_ANALOG_PIN);
     RV_Wind_ADunits = analogRead(RV_ANALOG_PIN);
     RV_Wind_Volts = (RV_Wind_ADunits *  0.0048828125);
@@ -125,17 +116,24 @@ void loop() {
 
     zeroWind_volts = (zeroWind_ADunits * 0.0048828125) - THERM_WIND_CALIBRATION;  
 
-    // This from a regression from data in the form of 
-    // Vraw = V0 + b * WindSpeed ^ c
-    // V0 is zero wind at a particular temperature
-    // The constants b and c were determined by some Excel wrangling with the solver.
+    /* This from a regression from data in the form of 
+       Vraw = V0 + b * WindSpeed ^ c
+       V0 is zero wind at a particular temperature
+       The constants b and c were determined by some Excel wrangling with the solver.
+    */
     
     WindSpeed_MPH =  pow(((RV_Wind_Volts - zeroWind_volts) /.2300) , 2.7265);   
    
     Serial.print("Wind Speed: ");
     Serial.print((float)WindSpeed_MPH);
-    Serial.println(" MPH");
+    Serial.print(" MPH");
 
-    lastMillis = millis();
+  // delay print output while slow mode is on;
+  // only needed for serial monitor
+  if(slow)
+  {
+    delay(250);
   }
+
+  Serial.print("\n"); // print new line for next output
 }
