@@ -99,45 +99,49 @@ void loop() {     // MAIN PROGRAM LOOP
     delay(500);
     lcd.clear();
   }
-
+  
   /* Reading both sensors and printing output.
      The 'if' statement allows us to continue
      execution if a hardware failure occurs.       
   */  
-  if (lift.wait_ready_timeout(200) && drag.wait_ready_timeout(200))
-  {
-    // Serial out
-    Serial.print("Drag:\t");
-    Serial.print(drag.get_units(), decimalPrecision);
-    Serial.print("  ");
-    Serial.print(UNITS);
-    Serial.print("\t\tLift:\t");
-    Serial.print(lift.get_units(), decimalPrecision);
-    Serial.print("  ");
-    Serial.print(UNITS);
-    // LCD out
-    lcd.home();                               // __________________
-    lcd.print("Drag  Lift  Wind");            // |Drag  Lift  Wind|
-    lcd.setCursor(0,1);                       // |0.00  0.00  0.00|
-    lcd.print(drag.get_units(), 1);           // ------------------
-    lcd.setCursor(6,1);                       // 16 character limit!
-    lcd.print(lift.get_units(), 1);
-  }
-  else
-  {
-    // Hardware failure, sensors did not initialize in time
-    Serial.println("HX711 not found. Please check connections.");
-    lcd.clear();
-    lcd.print("Sensor Error.");
-    lcd.setCursor(0,1);   // Set to bottom row
-    lcd.print("Check connection");
-    delay(10000);
-    lcd.clear();
-  }
+    if (lift.wait_ready_timeout(200) && drag.wait_ready_timeout(200))
+    {
+      // Serial out
+      Serial.print("Drag:\t");
+      Serial.print(drag.get_units(), decimalPrecision);
+      Serial.print("  ");
+      Serial.print(UNITS);
+      Serial.print("\t\tLift:\t");
+      Serial.print(lift.get_units(), decimalPrecision);
+      Serial.print("  ");
+      Serial.print(UNITS);
+      Serial.print("\t");
+      // LCD out
+      lcd.home();                               // __________________
+      lcd.print("Drag  Lift  Wind");            // |Drag  Lift  Wind|
+      lcd.setCursor(0,1);                       // |0.00  0.00  0.00|
+      lcd.print(drag.get_units(), 1);           // ------------------
+      lcd.setCursor(4,1);                       // 16 character limit!
+      lcd.print("  ");
+      lcd.setCursor(6,1);
+      lcd.print(lift.get_units(), 1);
+      lcd.setCursor(10,1);
+      lcd.print("  ");
+    }
+    else
+    {
+      // Hardware failure, sensors did not initialize in time
+      Serial.println("HX711 not found. Please check connections.");
+      lcd.clear();
+      lcd.print("Sensor Error.");
+      lcd.setCursor(0,1);   // Set to bottom row
+      lcd.print("Check connection");
+      delay(10000);
+      lcd.clear();
+    }
 
   // Wind sensor code modified from repository cited.
-  if (millis() - lastMillis > 200)  // read every 200 ms
-  {  
+   
     TMP_Therm_ADunits = analogRead(TMP_ANALOG_PIN);
     RV_Wind_ADunits = analogRead(RV_ANALOG_PIN);
     RV_Wind_Volts = (RV_Wind_ADunits *  0.0048828125);
@@ -160,13 +164,11 @@ void loop() {     // MAIN PROGRAM LOOP
     // Serial out
     Serial.print("Wind Speed: ");
     Serial.print((float)WindSpeed_MPH);
-    Serial.println(" MPH\t");
+    Serial.print(" MPH\t");
     Serial.print("\tTemp Celsius*100: ");
-    Serial.print(TempCtimes100);
+    Serial.println(TempCtimes100);
     // LCD out
     lcd.setCursor(12,1);
     lcd.print(WindSpeed_MPH); 
-
-    lastMillis = millis(); 
-  }
+ 
 }
