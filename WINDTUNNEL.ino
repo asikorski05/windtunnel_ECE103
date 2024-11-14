@@ -24,7 +24,7 @@
 const int DRAG_CALIBRATION_SCALE = 797.125;  // A
 const int LIFT_CALIBRATION_SCALE = 783.125;  // B
 char UNITS[] = "grams";
-const float THERM_WIND_CALIBRATION = 0.475;
+const float THERM_WIND_CALIBRATION = 0.47;
 
 // How many decimal places to print in the serial monitor?
 // Default is 1 due to fluctuating values.
