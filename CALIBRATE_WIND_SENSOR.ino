@@ -1,47 +1,53 @@
-/* Calibrating the wind speed sensor.
-   Modified by Alex Sikorski for ECE103. Revision 1.
+/* Calibrating and testing the wind speed sensor.
+   Modified by Alex Sikorski for ECE103. Revision 2.
    Code modified from https://github.com/moderndevice/Wind_Sensor/blob/master/WindSensor/WindSensor.ino
 
    To calibrate, place a glass or cup over the sensor to ensure no wind movement.
    The sensor should not be touching any surface. Change the calibration factor
    until the sensor reads zero. 
 */
+#include <LiquidCrystal.h>
 
-#include <Arduino.h>
+// Wind sensor pins
+const int analogPinForRV = 1;
+const int analogPinForTMP = 0;
+// LCD Pins
+const int rs = 13, en = 12, d4 = 11, d5 = 10, d6 = 9, d7 = 8;
 
-// adjust the zeroWindAdjustment until the sensor reads about zero with the glass over it.
-
-const float zeroWindAdjustment =  -2.4; // negative numbers yield smaller wind speeds and vice versa.
-
-
-// Define wiring
-const int RV_ANALOG_PIN = 1;
-const int TMP_ANALOG_PIN = 0;
+// Wind sensor adjustment
+const float zeroWindAdjustment = 0.47; // negative numbers yield smaller wind speeds and vice versa.
 
 // Vars for calculation
-int TMP_Therm_ADunits;    //temp termistor value from wind sensor
+int TMP_Therm_ADunits;  //temp termistor value from wind sensor
 float RV_Wind_ADunits;    //RV output from wind sensor 
 float RV_Wind_Volts;
+unsigned long lastMillis;
 int TempCtimes100;
 float zeroWind_ADunits;
 float zeroWind_volts;
 float WindSpeed_MPH;
 
-void setup() {
+// Initialize LCD
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
+void setup()
+{
+  // Create LCD Matrix
+  lcd.begin(16,2);
+  lcd.print("Start!");
+
+  // Start serial monitor for extended data
   Serial.begin(57600);
-  Serial.println("start");
+  Serial.println("Start!");
 
-  //   Uncomment the three lines below to reset the analog pins A2 & A3
-  //   This is code from the Modern Device temp sensor (not required)
-  //pinMode(A2, INPUT);        // GND pin      
-  //pinMode(A3, INPUT);        // VCC pin
-  //digitalWrite(A3, LOW);     // turn off pullups
-
+  delay(100);
+  lcd.clear();
 }
 
 void loop() {
 
+  if (millis() - lastMillis > 200)  // read every 200 ms
+  {     
     TMP_Therm_ADunits = analogRead(analogPinForTMP);
     RV_Wind_ADunits = analogRead(analogPinForRV);
     RV_Wind_Volts = (RV_Wind_ADunits *  0.0048828125);
@@ -61,6 +67,7 @@ void loop() {
     
    WindSpeed_MPH =  pow(((RV_Wind_Volts - zeroWind_volts) /.2300) , 2.7265);   
    
+   // Serial Printing
     Serial.print("  TMP volts ");
     Serial.print(TMP_Therm_ADunits * 0.0048828125);
     
@@ -75,7 +82,23 @@ void loop() {
 
     Serial.print("   WindSpeed MPH ");
     Serial.println((float)WindSpeed_MPH);
+    lastMillis = millis(); 
 
+    // LCD Printing
+    /* _________________
+       |Drag  Lift  Wind|
+       |0.00  0.00  00.0|
+       ------------------
+    */
+    lcd.home();
+    lcd.print("Drag  Lift  Wind");
+    lcd.setCursor(0,1);
+    lcd.print(0.00);
+    lcd.setCursor(6,1);
+    lcd.print(0.00);
+    lcd.setCursor(12,1);
+    lcd.print(WindSpeed_MPH);    
+  } 
 }
 
 
