@@ -4,7 +4,7 @@ Calibrate the load sensors with the CALIBRATE_LOAD_CELLS.ino file.
 Calibrate the wind sensor with the CALIBRATE_WIND_SENSOR.ino file.
 Instructions for calibrating are in each file.
 
-  Use standard load cells with HX711 amplifiers.
+  Use standard 1kg load cells with HX711 amplifiers.
   The thermal wind speed sensor was sourced from here: https://moderndevice.com/products/wind-sensor
 
   Please note the fritzing diagram to wire each sensor.
@@ -18,4 +18,4 @@ Place the calibration values into the labeled variables inside this file.
 
 
 If there is a sensor error, please check that digital pins 2-5 are connected properly.
-If wind speed is erratic or unrealistic, please check that a seperate 5V power supply is connected.
+If wind speed is erratic or unrealistic, please check that a seperate 5V power supply is connected and the analog pins 0-1 are connected properly.
