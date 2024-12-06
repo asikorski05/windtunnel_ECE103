@@ -4,7 +4,7 @@
    Before using this script, please make sure each sensor is calibrated.
    Data is output to the serial monitor at specified baud rate (57200).
 
-   Written by Alex Sikorski for ECE103. Revision 5.
+   Written by Alex Sikorski for ECE103. Revision 6.
    Windspeed code modified from https://github.com/moderndevice/Wind_Sensor/blob/master/WindSensor/WindSensor.ino
    HX711 Library used from: https://github.com/bogde/HX711/releases
 
@@ -19,16 +19,18 @@
 #include <LiquidCrystal.h>
 
 
-// Insert these numbers from the calibration script.
-// Also insert the units used from the calculation.
-const int DRAG_CALIBRATION_SCALE = 797.125;  // A
-const int LIFT_CALIBRATION_SCALE = 783.125;  // B
-char UNITS[] = "grams";
+// Insert these numbers from the seperate calibration scripts.
+// THESE NUMBERS WILL VARY FOR YOUR OWN SENSORS. These values worked for
+// our sensors, but they may not provide accurate results for you.
+const int DRAG_CALIBRATION_SCALE = 797.125;     // A
+const int LIFT_CALIBRATION_SCALE = 783.125;     // B
 const float THERM_WIND_CALIBRATION = 0.47;
+// Use the units from the 'known weight' during calibration. Wind speed is always MPH.
+char UNITS[] = "grams";   
 
 // How many decimal places to print in the serial monitor?
-// Default is 1 due to fluctuating values.
-const int decimalPrecision = 1;
+// Default '2' due to mildly fluctuating values.
+const int decimalPrecision = 2;
 
 
 // define wiring and vars
@@ -48,11 +50,11 @@ const int decimalPrecision = 1;
   int TMP_Therm_ADunits;  //temp thermistor value from wind sensor
   float RV_Wind_ADunits;  //RV output from wind sensor 
   float RV_Wind_Volts;
-  unsigned long lastMillis;
-  int TempCtimes100;
+  unsigned long lastMillis;   //timing variable
+  int TempCtimes100;      //measured temperature * 100
   float zeroWind_ADunits;
   float zeroWind_volts;
-  float WindSpeed_MPH;
+  float WindSpeed_MPH;   //result
 
 // Initializing libraries as objects
   HX711 drag;
@@ -77,12 +79,12 @@ void setup() {
   lift.set_scale(LIFT_CALIBRATION_SCALE);
   lift.tare();
 
-
   Serial.print("\n\n Setup Complete! \n\n");
   lcd.print("Setup Complete!");
   delay(500);
   lcd.clear();
 }
+
 
 void loop() {     // MAIN PROGRAM LOOP
 
@@ -100,7 +102,7 @@ void loop() {     // MAIN PROGRAM LOOP
     lcd.clear();
   }
   
-  /* Reading both sensors and printing output.
+  /* Reading both load sensors and printing output.
      The 'if' statement allows us to continue
      execution if a hardware failure occurs.       
   */  
@@ -108,6 +110,7 @@ void loop() {     // MAIN PROGRAM LOOP
     {
       // Serial out
       Serial.print("Drag:\t");
+      // print result and cut off excess decimal values
       Serial.print(drag.get_units(), decimalPrecision);
       Serial.print("  ");
       Serial.print(UNITS);
@@ -116,22 +119,32 @@ void loop() {     // MAIN PROGRAM LOOP
       Serial.print("  ");
       Serial.print(UNITS);
       Serial.print("\t");
-      // LCD out
-      lcd.home();                               // __________________
-      lcd.print("Drag  Lift  Wind");            // |Drag  Lift  Wind|
-      lcd.setCursor(0,1);                       // |0.00  0.00  0.00|
-      lcd.print(drag.get_units(), 1);           // ------------------
-      lcd.setCursor(4,1);                       // 16 character limit!
+       
+      // LCD out                                 
+      lcd.home();                              
+      lcd.print("Drag  Lift  Wind");            
+      lcd.setCursor(0,1);      
+      // print result and lock decimal precision
+      // to tenths place (1) for limited screen space.
+      lcd.print(drag.get_units(), 1);        
+      lcd.setCursor(4,1);                       
       lcd.print("  ");
       lcd.setCursor(6,1);
       lcd.print(lift.get_units(), 1);
       lcd.setCursor(10,1);
       lcd.print("  ");
+          // LCD preview:
+          // __________________
+          // |Drag  Lift  Wind|
+          // |0.00  0.00  0.00|
+          // ------------------
+          // 16 character limit!
     }
     else
     {
       // Hardware failure, sensors did not initialize in time
-      Serial.println("HX711 not found. Please check connections.");
+      Serial.println("HX711 not found. Please check connection to both load cells. ");
+      Serial.println("Default: Digital pins 2 through 5");
       lcd.clear();
       lcd.print("Sensor Error.");
       lcd.setCursor(0,1);   // Set to bottom row
